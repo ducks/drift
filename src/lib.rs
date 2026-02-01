@@ -140,9 +140,10 @@ fn check_dead_code_markers() -> Vec<Issue> {
             for entry in entries.filter_map(|e| e.ok()) {
                 let path = entry.path();
                 if path.is_dir() {
-                    if path.file_name().is_some_and(|n| {
-                        n != "target" && n != ".git" && n != "node_modules"
-                    }) {
+                    if path
+                        .file_name()
+                        .is_some_and(|n| n != "target" && n != ".git" && n != "node_modules")
+                    {
                         walk_source(&path, markers, issues);
                     }
                 } else if path.is_file() {
