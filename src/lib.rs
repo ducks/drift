@@ -254,7 +254,21 @@ mod tests {
 
     #[test]
     fn test_run_audit_returns_vec() {
-        // Should return a vec without panicking (may be empty in a clean repo)
-        let _issues = run_audit();
+        let issues = run_audit();
+        // Verify that any issues found are well-formed
+        for issue in &issues {
+            assert!(
+                !issue.category.is_empty(),
+                "Issue category should not be empty"
+            );
+            assert!(
+                !issue.severity.is_empty(),
+                "Issue severity should not be empty"
+            );
+            assert!(
+                !issue.message.is_empty(),
+                "Issue message should not be empty"
+            );
+        }
     }
 }
