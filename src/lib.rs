@@ -209,39 +209,56 @@ fn check_git_drift() -> Vec<Issue> {
 fn check_gitignore_drift() -> Vec<Issue> {
     let mut issues = Vec::new();
 
-    if let Ok(content) = fs::read_to_string(".gitignore") {
-        for line in content.lines() {
-            let line = line.trim();
-            if line.is_empty() || line.starts_with('#') {
-                continue;
-            }
+    match fs::read_to_string(".gitignore") {
+        Ok(content) => {
+            for line in content.lines() {
+                let line = line.trim();
+                if line.is_empty() || line.starts_with('#') {
+                    continue;
+                }
 
-            // Simple check: if it's a literal path (no wildcards) and doesn't exist
-            if !line.contains('*') && !line.contains('?') {
-                let path = std::path::Path::new(line.trim_start_matches('/'));
-                if !path.exists() && !line.ends_with('/') {
-                    // Skip common patterns that may not exist yet
-                    if !matches!(
-                        line,
-                        "*.log"
-                            | "*.tmp"
-                            | ".env"
-                            | ".env.local"
-                            | "node_modules"
-                            | "target"
-                            | "dist"
-                            | "build"
-                    ) {
-                        issues.push(Issue {
-                            category: "gitignore_drift".to_string(),
-                            severity: "info".to_string(),
-                            message: format!("Gitignore entry '{}' doesn't match any files", line),
-                            path: Some(PathBuf::from(".gitignore")),
-                            line: None,
-                        });
+                // Simple check: if it's a literal path (no wildcards) and doesn't exist
+                if !line.contains('*') && !line.contains('?') {
+                    let path = std::path::Path::new(line.trim_start_matches('/'));
+                    if !path.exists() && !line.ends_with('/') {
+                        // Skip common patterns that may not exist yet
+                        if !matches!(
+                            line,
+                            "*.log"
+                                | "*.tmp"
+                                | ".env"
+                                | ".env.local"
+                                | "node_modules"
+                                | "target"
+                                | "dist"
+                                | "build"
+                        ) {
+                            issues.push(Issue {
+                                category: "gitignore_drift".to_string(),
+                                severity: "info".to_string(),
+                                message: format!(
+                                    "Gitignore entry '{}' doesn't match any files",
+                                    line
+                                ),
+                                path: Some(PathBuf::from(".gitignore")),
+                                line: None,
+                            });
+                        }
                     }
                 }
             }
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            // No .gitignore file - nothing to check
+        }
+        Err(e) => {
+            issues.push(Issue {
+                category: "gitignore_drift".to_string(),
+                severity: "warning".to_string(),
+                message: format!("Failed to read .gitignore: {}", e),
+                path: Some(PathBuf::from(".gitignore")),
+                line: None,
+            });
         }
     }
 
