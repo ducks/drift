@@ -1,0 +1,19 @@
+[defaults]
+parallel = true
+timeout = 300
+command_wrapper = "nix-shell --run '{cmd}'"
+
+[backends.claude]
+enabled = true
+command = "claude"
+
+[backends.codex]
+enabled = true
+command = "codex"
+args = ["exec", "--json", "-s", "read-only"]
+
+[backends.gemini]
+enabled = true
+command = "npx"
+args = ["@google/gemini-cli"]
+timeout = 600
